@@ -1,0 +1,65 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+
+# Xcode user-specific files
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Xcode local settings (keep shared schemes)
+*.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+
+# Generated Xcode project (since we use XcodeGen with project.yml)
+VidPull.xcodeproj/
+
+# Build artifacts
+*.app
+*.dSYM
+*.dSYM.zip
+*.ipa
+
+# Distribution
+*.dmg
+*.pkg
+*.zip
+
+# Archives
+*.xcarchive
+
+# Crashlytics
+crashlytics-build.properties
+crashlytics.properties
+fabric.properties
+
+# CocoaPods (if used)
+Pods/
+*.xcworkspace
+
+# Carthage (if used)
+Carthage/Build/
+Carthage/Checkouts/
+
+# fastlane (if used)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# Code Injection
+iOSInjectionProject/
