@@ -60,7 +60,7 @@ targets:
         UIBackgroundModes:
           - fetch
           - processing
-        LSBackgroundOnly: false
+        LSUIElement: true
     entitlements:
       path: Sources/Resources/VidPull.entitlements
       properties:

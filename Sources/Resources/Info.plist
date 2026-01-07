@@ -5,15 +5,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>yt-dlp-Wrapper</string>
+	<string>VidPull</string>
 	<key>CFBundleExecutable</key>
-	<string>yt-dlp-Wrapper</string>
+	<string>VidPull</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.ytdlpwrapper.app</string>
+	<string>com.vidpull.app</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>yt-dlp-Wrapper</string>
+	<string>VidPull</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -22,24 +22,24 @@
 	<string>1</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
-	<key>LSBackgroundOnly</key>
-	<false/>
+	<key>LSUIElement</key>
+	<true/>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>yt-dlp-Wrapper uses Apple Events to interact with other applications.</string>
+	<string>VidPull uses Apple Events to interact with other applications.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2024. All rights reserved.</string>
 	<key>NSMenuBarExtraUsageDescription</key>
-	<string>yt-dlp-Wrapper runs in the menu bar for quick access.</string>
+	<string>VidPull runs in the menu bar for quick access.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>yt-dlp-Wrapper needs permission to save downloaded media to your photo library.</string>
+	<string>VidPull needs permission to save downloaded media to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>yt-dlp-Wrapper may access your photo library to save downloaded media.</string>
+	<string>VidPull may access your photo library to save downloaded media.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSSystemExtensionUsageDescription</key>
-	<string>yt-dlp-Wrapper needs system extensions to provide enhanced functionality.</string>
+	<string>VidPull needs system extensions to provide enhanced functionality.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
