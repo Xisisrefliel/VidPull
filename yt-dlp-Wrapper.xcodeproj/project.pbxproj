@@ -1,0 +1,395 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		301970A9257B268CA7C8DB19 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B75F66A8B767C700AD8E0367 /* MenuBarView.swift */; };
+		424F3FEF76EF990511ADC8B9 /* YTDLPConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7EB1923DF093903CE8FBCB1 /* YTDLPConfig.swift */; };
+		64AC099C503BB7D73669EE0D /* YTDLPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF24491A2135914B76A90AA7 /* YTDLPService.swift */; };
+		7299DDEAD1CDCC849C073041 /* yt_dlp_WrapperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE086B8CEAB2FF0FE4225A0 /* yt_dlp_WrapperApp.swift */; };
+		CFFCC74E7C41DE7219A045FD /* DownloadRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CDA87831A465B829BE1E6BA /* DownloadRowView.swift */; };
+		D45E7941052B32410029270C /* DownloadItemModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCE7437BE75B42F5AFE4E39 /* DownloadItemModel.swift */; };
+		F937D928A3E90954934C90AF /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3C48EA3BA50AB30624867C /* DownloadManager.swift */; };
+		FDE05733F3772E35BE4F48A2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45B50AA7878A9D9A385CB1B2 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		064E3355B3FC42E604DBE4D1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0698843C9FE6499722EB2C21 /* yt-dlp-Wrapper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "yt-dlp-Wrapper.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		077D356A297B5D96D35D4701 /* yt-dlp-Wrapper.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "yt-dlp-Wrapper.entitlements"; sourceTree = "<group>"; };
+		45B50AA7878A9D9A385CB1B2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8B3C48EA3BA50AB30624867C /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
+		8CDA87831A465B829BE1E6BA /* DownloadRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadRowView.swift; sourceTree = "<group>"; };
+		9DE086B8CEAB2FF0FE4225A0 /* yt_dlp_WrapperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = yt_dlp_WrapperApp.swift; sourceTree = "<group>"; };
+		B75F66A8B767C700AD8E0367 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		B7EB1923DF093903CE8FBCB1 /* YTDLPConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YTDLPConfig.swift; sourceTree = "<group>"; };
+		CBCE7437BE75B42F5AFE4E39 /* DownloadItemModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadItemModel.swift; sourceTree = "<group>"; };
+		EF24491A2135914B76A90AA7 /* YTDLPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YTDLPService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1D8F88B069843E1B7E647318 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				8B3C48EA3BA50AB30624867C /* DownloadManager.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		452B55CEED25C43E8B4B8077 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				9DE086B8CEAB2FF0FE4225A0 /* yt_dlp_WrapperApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		600AF0951EBD8EB2418C0302 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				8CDA87831A465B829BE1E6BA /* DownloadRowView.swift */,
+				B75F66A8B767C700AD8E0367 /* MenuBarView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		780F4923BFA9B519EA729E65 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0698843C9FE6499722EB2C21 /* yt-dlp-Wrapper.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		95A4798C3AC7702DD5422B66 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				452B55CEED25C43E8B4B8077 /* App */,
+				F19F250F8C45BF204CA75A33 /* Models */,
+				F157A2E1F720035D153B6D07 /* Resources */,
+				EB556FA20779B9BB39FCBC40 /* Services */,
+				1D8F88B069843E1B7E647318 /* ViewModels */,
+				600AF0951EBD8EB2418C0302 /* Views */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		C95F2B421909CBA9DB0D70DA = {
+			isa = PBXGroup;
+			children = (
+				95A4798C3AC7702DD5422B66 /* Sources */,
+				780F4923BFA9B519EA729E65 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EB556FA20779B9BB39FCBC40 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				EF24491A2135914B76A90AA7 /* YTDLPService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F157A2E1F720035D153B6D07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				45B50AA7878A9D9A385CB1B2 /* Assets.xcassets */,
+				064E3355B3FC42E604DBE4D1 /* Info.plist */,
+				077D356A297B5D96D35D4701 /* yt-dlp-Wrapper.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		F19F250F8C45BF204CA75A33 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				CBCE7437BE75B42F5AFE4E39 /* DownloadItemModel.swift */,
+				B7EB1923DF093903CE8FBCB1 /* YTDLPConfig.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		28344A2B738F21F3E517737F /* yt-dlp-Wrapper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F196F6563FDE301172C89668 /* Build configuration list for PBXNativeTarget "yt-dlp-Wrapper" */;
+			buildPhases = (
+				E7143968F8355DBD11B282A3 /* Sources */,
+				C63C39501FED93F865347349 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "yt-dlp-Wrapper";
+			packageProductDependencies = (
+			);
+			productName = "yt-dlp-Wrapper";
+			productReference = 0698843C9FE6499722EB2C21 /* yt-dlp-Wrapper.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6A8E5D5A991F03A194D3DA17 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					28344A2B738F21F3E517737F = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = A15180B9C110492123CD9A7F /* Build configuration list for PBXProject "yt-dlp-Wrapper" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = C95F2B421909CBA9DB0D70DA;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				28344A2B738F21F3E517737F /* yt-dlp-Wrapper */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C63C39501FED93F865347349 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDE05733F3772E35BE4F48A2 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E7143968F8355DBD11B282A3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D45E7941052B32410029270C /* DownloadItemModel.swift in Sources */,
+				F937D928A3E90954934C90AF /* DownloadManager.swift in Sources */,
+				CFFCC74E7C41DE7219A045FD /* DownloadRowView.swift in Sources */,
+				301970A9257B268CA7C8DB19 /* MenuBarView.swift in Sources */,
+				424F3FEF76EF990511ADC8B9 /* YTDLPConfig.swift in Sources */,
+				64AC099C503BB7D73669EE0D /* YTDLPService.swift in Sources */,
+				7299DDEAD1CDCC849C073041 /* yt_dlp_WrapperApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2B68646D54B34B0E97F4E9AF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		8B3022973B2DA8705E78C198 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Sources/Resources/yt-dlp-Wrapper.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Sources/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ytdlpwrapper.app;
+				PRODUCT_NAME = "yt-dlp-Wrapper";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		9CC29BD23C6DE8C2CD45A263 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Sources/Resources/yt-dlp-Wrapper.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Sources/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ytdlpwrapper.app;
+				PRODUCT_NAME = "yt-dlp-Wrapper";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		DBA97EF920DF3272353C4731 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A15180B9C110492123CD9A7F /* Build configuration list for PBXProject "yt-dlp-Wrapper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DBA97EF920DF3272353C4731 /* Debug */,
+				2B68646D54B34B0E97F4E9AF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F196F6563FDE301172C89668 /* Build configuration list for PBXNativeTarget "yt-dlp-Wrapper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8B3022973B2DA8705E78C198 /* Debug */,
+				9CC29BD23C6DE8C2CD45A263 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6A8E5D5A991F03A194D3DA17 /* Project object */;
+}

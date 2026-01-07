@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>yt-dlp-Wrapper</string>
+	<key>CFBundleExecutable</key>
+	<string>yt-dlp-Wrapper</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.ytdlpwrapper.app</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>yt-dlp-Wrapper</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>LSBackgroundOnly</key>
+	<false/>
+	<key>LSMinimumSystemVersion</key>
+	<string>13.0</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>yt-dlp-Wrapper uses Apple Events to interact with other applications.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2024. All rights reserved.</string>
+	<key>NSMenuBarExtraUsageDescription</key>
+	<string>yt-dlp-Wrapper runs in the menu bar for quick access.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>yt-dlp-Wrapper needs permission to save downloaded media to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>yt-dlp-Wrapper may access your photo library to save downloaded media.</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSSystemExtensionUsageDescription</key>
+	<string>yt-dlp-Wrapper needs system extensions to provide enhanced functionality.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+</dict>
+</plist>
