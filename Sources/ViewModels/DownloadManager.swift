@@ -1,6 +1,11 @@
 import Foundation
 import SwiftUI
 import UserNotifications
+import Combine
+
+extension Notification.Name {
+    static let vidpullURLReceived = Notification.Name("vidpullURLReceived")
+}
 
 class DownloadManager: ObservableObject {
     @Published var urlInput: String = ""
@@ -13,6 +18,7 @@ class DownloadManager: ObservableObject {
 
     private var ytDLPService = YTDLPService.shared
     private var currentTaskId: UUID?
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Persistence
     
@@ -40,6 +46,16 @@ class DownloadManager: ObservableObject {
         
         // Load persisted history
         self.downloads = Self.loadHistory()
+        
+        // Listen for URL scheme notifications
+        NotificationCenter.default.publisher(for: .vidpullURLReceived)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                if let url = notification.userInfo?["url"] as? String {
+                    self?.setURLFromExtension(url)
+                }
+            }
+            .store(in: &cancellables)
         
         Task {
             await ytDLPService.initialize()
@@ -160,6 +176,11 @@ class DownloadManager: ObservableObject {
     func setOutputFolder(_ url: URL) {
         config.outputFolder = url
         saveConfig()
+    }
+    
+    /// Sets the URL input from an external source (e.g., Chrome extension via URL scheme)
+    func setURLFromExtension(_ urlString: String) {
+        urlInput = urlString
     }
     
     func setFormat(_ format: YTDLPConfig.FormatOption) {

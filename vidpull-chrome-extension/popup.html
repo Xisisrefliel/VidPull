@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VidPull Settings</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 280px;
+      padding: 16px;
+      background: #1a1a1a;
+      color: #ffffff;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #333;
+    }
+
+    .header svg {
+      width: 24px;
+      height: 24px;
+      color: #3b82f6;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .setting {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .setting:last-child {
+      border-bottom: none;
+    }
+
+    .setting-label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .setting-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .setting-desc {
+      font-size: 11px;
+      color: #888;
+    }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #444;
+      transition: 0.2s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.2s;
+      border-radius: 50%;
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background-color: #3b82f6;
+    }
+
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .shortcut-info {
+      margin-top: 12px;
+      padding: 10px;
+      background: #252525;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .shortcut-key {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #333;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 11px;
+      margin: 0 2px;
+    }
+
+    .shortcut-link {
+      display: block;
+      margin-top: 8px;
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 11px;
+    }
+
+    .shortcut-link:hover {
+      text-decoration: underline;
+    }
+
+    .footer {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #333;
+      text-align: center;
+      font-size: 11px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    <h1>VidPull</h1>
+  </div>
+
+  <div class="setting">
+    <div class="setting-label">
+      <span class="setting-title">Enable Extension</span>
+      <span class="setting-desc">Show download buttons on videos</span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="extensionEnabled" checked>
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <div class="setting">
+    <div class="setting-label">
+      <span class="setting-title">Show Overlays</span>
+      <span class="setting-desc">Toggle visibility of buttons</span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="overlaysVisible" checked>
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <div class="shortcut-info">
+    <strong>Keyboard Shortcut</strong><br>
+    Press <span class="shortcut-key">Alt</span> + <span class="shortcut-key">Shift</span> + <span class="shortcut-key">V</span> to toggle overlays
+    <a href="#" id="shortcutLink" class="shortcut-link">Change shortcut in Chrome settings</a>
+  </div>
+
+  <div class="footer">
+    VidPull v1.0.0
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
