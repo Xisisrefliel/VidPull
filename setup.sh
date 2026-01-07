@@ -2,7 +2,7 @@
 
 set -e
 
-echo "=== yt-dlp-Wrapper Setup Script ==="
+echo "=== VidPull Setup Script ==="
 echo ""
 
 cd "$(dirname "$0")"
@@ -17,8 +17,8 @@ xcodegen generate
 
 echo ""
 echo "Building project..."
-xcodebuild -project yt-dlp-Wrapper.xcodeproj \
-    -scheme yt-dlp-Wrapper \
+xcodebuild -project VidPull.xcodeproj \
+    -scheme VidPull \
     -configuration Debug \
     build
 
@@ -26,7 +26,7 @@ echo ""
 echo "=== Build Complete ==="
 echo ""
 echo "To run the app:"
-echo "  1. Open yt-dlp-Wrapper.xcodeproj in Xcode"
+echo "  1. Open VidPull.xcodeproj in Xcode"
 echo "  2. Press Cmd+R to run"
 echo ""
 echo "Note: Make sure yt-dlp is installed on your system:"

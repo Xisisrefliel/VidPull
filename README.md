@@ -41,7 +41,7 @@ brew install xcodegen
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/VidPull.git
+git clone https://github.com/Xisisrefliel/VidPull.git
 cd VidPull
 
 # Run the setup script
@@ -59,8 +59,8 @@ open build/Debug/VidPull.app
 xcodegen generate
 
 # Build the project
-xcodebuild -project yt-dlp-Wrapper.xcodeproj \
-    -scheme yt-dlp-Wrapper \
+xcodebuild -project VidPull.xcodeproj \
+    -scheme VidPull \
     -configuration Debug \
     build
 
