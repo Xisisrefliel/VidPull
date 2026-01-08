@@ -28,8 +28,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "arrow.down.circle.fill", accessibilityDescription: "VidPull")
-            button.action = #selector(togglePopover)
+            button.action = #selector(handleStatusItemClick)
             button.target = self
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         
         // Create the popover
@@ -42,6 +43,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let contentView = MenuBarView()
             .environmentObject(sharedDownloadManager)
         popover?.contentViewController = NSHostingController(rootView: contentView)
+    }
+    
+    @objc func handleStatusItemClick() {
+        guard let event = NSApp.currentEvent else { return }
+        
+        if event.type == .rightMouseUp {
+            showContextMenu()
+        } else {
+            togglePopover()
+        }
+    }
+    
+    private func showContextMenu() {
+        guard let button = statusItem?.button else { return }
+        
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Quit VidPull", action: #selector(quitApp), keyEquivalent: "q"))
+        
+        statusItem?.menu = menu
+        button.performClick(nil)
+        statusItem?.menu = nil  // Remove menu so left-click works again
+    }
+    
+    @objc func quitApp() {
+        NSApp.terminate(nil)
     }
     
     @objc func togglePopover() {
