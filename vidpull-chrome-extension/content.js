@@ -152,8 +152,55 @@
       return ogVideo.content;
     }
     
-    // 5. Use page URL as last resort
-    return window.location.href;
+    // 5. Use page URL as last resort, but clean it for YouTube
+    return cleanVideoUrl(window.location.href);
+  }
+
+  /**
+   * Clean a video URL to remove playlist parameters and other unnecessary parts
+   * This ensures we get just the single video URL, not a playlist URL
+   */
+  function cleanVideoUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      
+      // YouTube: Extract just the video ID, remove playlist and other params
+      if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+        let videoId = null;
+        
+        // youtube.com/watch?v=VIDEO_ID
+        if (urlObj.pathname === '/watch') {
+          videoId = urlObj.searchParams.get('v');
+        }
+        // youtube.com/shorts/VIDEO_ID
+        else if (urlObj.pathname.startsWith('/shorts/')) {
+          videoId = urlObj.pathname.split('/shorts/')[1]?.split('/')[0];
+        }
+        // youtube.com/live/VIDEO_ID
+        else if (urlObj.pathname.startsWith('/live/')) {
+          videoId = urlObj.pathname.split('/live/')[1]?.split('/')[0];
+        }
+        // youtube.com/embed/VIDEO_ID
+        else if (urlObj.pathname.startsWith('/embed/')) {
+          videoId = urlObj.pathname.split('/embed/')[1]?.split('/')[0];
+        }
+        // youtu.be/VIDEO_ID
+        else if (urlObj.hostname === 'youtu.be') {
+          videoId = urlObj.pathname.substring(1).split('/')[0];
+        }
+        
+        if (videoId) {
+          // Return clean YouTube URL with just the video ID
+          return `https://www.youtube.com/watch?v=${videoId}`;
+        }
+      }
+      
+      // For other sites, return as-is
+      return url;
+    } catch (e) {
+      // If URL parsing fails, return original
+      return url;
+    }
   }
 
   /**

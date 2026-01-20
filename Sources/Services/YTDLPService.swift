@@ -206,17 +206,10 @@ actor YTDLPService {
         if let formatString = config.format.ytDLPFormat {
             arguments.append("-f")
             arguments.append(formatString)
-            print("🎬 Using format: \(formatString)")
-        } else {
-            print("🎬 Using default format (best quality)")
         }
         
         // Add format-specific arguments (e.g., audio extraction)
-        let additionalArgs = config.format.additionalArguments
-        if !additionalArgs.isEmpty {
-            print("🎬 Additional args: \(additionalArgs)")
-        }
-        arguments.append(contentsOf: additionalArgs)
+        arguments.append(contentsOf: config.format.additionalArguments)
 
         arguments.append("--output")
         arguments.append("\(config.outputFolder.path)/%(title)s.%(ext)s")
@@ -224,9 +217,6 @@ actor YTDLPService {
         arguments.append(url)
 
         process.arguments = arguments
-        
-        // Debug: Print the full command being executed
-        print("🎬 yt-dlp command: \(ytDLPPath.path) \(arguments.joined(separator: " "))")
 
         let outputHandle = stdoutPipe.fileHandleForReading
         let errorHandle = stderrPipe.fileHandleForReading
