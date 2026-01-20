@@ -32,7 +32,7 @@ struct MenuBarView: View {
                 .font(.title2)
                 .foregroundStyle(.blue)
 
-            Text("yt-dlp")
+            Text("VidPull")
                 .font(.title2)
                 .fontWeight(.semibold)
 
@@ -43,18 +43,52 @@ struct MenuBarView: View {
                     .foregroundStyle(.orange)
                     .help(error)
             }
+            
+            Button(action: openSettings) {
+                Image(systemName: "gear")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Settings")
         }
+    }
+    
+    private func openSettings() {
+        // Post notification to open settings from AppDelegate
+        NotificationCenter.default.post(name: .openSettings, object: nil)
     }
 
     private var inputSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("URL")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            HStack {
+                Text("URL")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                
+                Spacer()
+                
+                Button(action: pasteFromClipboard) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "doc.on.clipboard")
+                            .font(.system(size: 10))
+                        Text("Paste")
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.blue)
+            }
 
             TextField("Paste URL here...", text: $manager.urlInput)
                 .textFieldStyle(.roundedBorder)
                 .autocorrectionDisabled()
+        }
+    }
+    
+    private func pasteFromClipboard() {
+        if let content = NSPasteboard.general.string(forType: .string) {
+            manager.urlInput = content.trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
 
@@ -111,21 +145,41 @@ struct MenuBarView: View {
 
             HStack(spacing: 12) {
                 Button(action: manager.startDownload) {
-                    Label("Download", systemImage: "arrow.down.circle")
-                        .frame(maxWidth: .infinity)
+                    HStack {
+                        Image(systemName: "arrow.down.circle")
+                        Text(manager.isDownloading ? "Add to Queue" : "Download")
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(manager.urlInput.isEmpty || manager.isDownloading)
+                .disabled(manager.urlInput.isEmpty)
 
-                if manager.isDownloading {
+                if manager.pendingCount > 0 {
                     Button(action: {
                         Task {
-                            await manager.cancelDownload()
+                            await manager.cancelAllDownloads()
                         }
                     }) {
-                        Label("Cancel", systemImage: "xmark.circle")
+                        Label("Cancel All", systemImage: "xmark.circle")
                     }
                     .buttonStyle(.bordered)
+                }
+            }
+            
+            // Queue status
+            if manager.pendingCount > 0 {
+                HStack {
+                    if manager.activeDownloads.count > 0 {
+                        Text("\(manager.activeDownloads.count) downloading")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                    }
+                    if manager.queuedDownloads.count > 0 {
+                        Text("\(manager.queuedDownloads.count) queued")
+                            .font(.caption)
+                            .foregroundStyle(.purple)
+                    }
+                    Spacer()
                 }
             }
         }
@@ -133,21 +187,50 @@ struct MenuBarView: View {
 
     private var activeDownloadSection: some View {
         Group {
-            if let active = manager.activeDownload {
+            let activeItems = manager.activeDownloads
+            if !activeItems.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Current Download")
+                    Text("Active Downloads")
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
 
-                    DownloadRowView(
-                        item: active,
-                        onOpen: { manager.openFile(active) },
-                        onOpenFolder: { manager.openFolder(active) }
-                    )
+                    ForEach(activeItems) { item in
+                        DownloadRowView(
+                            item: item,
+                            onOpen: { manager.openFile(item) },
+                            onOpenFolder: { manager.openFolder(item) },
+                            onCancel: {
+                                Task { await manager.cancelDownload(item) }
+                            }
+                        )
+                    }
                 }
                 .padding(10)
                 .background(Color.blue.opacity(0.08))
+                .cornerRadius(8)
+            }
+            
+            // Queued downloads section
+            let queuedItems = manager.queuedDownloads
+            if !queuedItems.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Queued (\(queuedItems.count))")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+
+                    ForEach(queuedItems) { item in
+                        DownloadRowView(
+                            item: item,
+                            onOpen: { },
+                            onOpenFolder: { manager.openFolder(item) },
+                            onCancel: { manager.removeFromQueue(item) }
+                        )
+                    }
+                }
+                .padding(10)
+                .background(Color.purple.opacity(0.06))
                 .cornerRadius(8)
             }
         }
@@ -184,13 +267,7 @@ struct MenuBarView: View {
                     ScrollView {
                         LazyVStack(spacing: 6) {
                             ForEach(manager.visibleDownloads) { item in
-                                DownloadRowView(
-                                    item: item,
-                                    onOpen: { manager.openFile(item) },
-                                    onOpenFolder: { manager.openFolder(item) },
-                                    onRetry: item.status == .failed || item.status == .cancelled ? { manager.retryDownload(item) } : nil,
-                                    onRemove: { manager.removeDownload(item) }
-                                )
+                                downloadRowView(for: item)
                             }
                             
                             if manager.hasMoreItems {
@@ -235,6 +312,31 @@ struct MenuBarView: View {
         if response == .OK, let url = panel.url {
             manager.setOutputFolder(url)
         }
+    }
+    
+    @ViewBuilder
+    private func downloadRowView(for item: DownloadItemModel) -> some View {
+        let cancelAction: (() -> Void)? = {
+            if item.status.isActive {
+                return { 
+                    Task { 
+                        await manager.cancelDownload(item) 
+                    } 
+                }
+            } else if item.status == .queued {
+                return { manager.removeFromQueue(item) }
+            }
+            return nil
+        }()
+        
+        DownloadRowView(
+            item: item,
+            onOpen: { manager.openFile(item) },
+            onOpenFolder: { manager.openFolder(item) },
+            onRetry: item.status == .failed || item.status == .cancelled ? { manager.retryDownload(item) } : nil,
+            onRemove: item.status.isTerminal ? { manager.removeDownload(item) } : nil,
+            onCancel: cancelAction
+        )
     }
 }
 

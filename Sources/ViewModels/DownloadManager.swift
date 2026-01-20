@@ -5,29 +5,68 @@ import Combine
 
 extension Notification.Name {
     static let vidpullURLReceived = Notification.Name("vidpullURLReceived")
+    static let openSettings = Notification.Name("openSettings")
 }
 
 class DownloadManager: ObservableObject {
     @Published var urlInput: String = ""
     @Published var downloads: [DownloadItemModel] = []
-    @Published var activeDownload: DownloadItemModel?
     @Published var config: YTDLPConfig
-    @Published var isDownloading: Bool = false
     @Published var errorMessage: String?
     @Published var visibleItemsCount: Int = 10
+    @Published var isYTDLPAvailable: Bool = true
 
     private var ytDLPService = YTDLPService.shared
-    private var currentTaskId: UUID?
+    private var activeTaskIds: Set<UUID> = []
     private var cancellables = Set<AnyCancellable>()
+    
+    // Queue settings
+    var maxConcurrentDownloads: Int {
+        AppSettingsManager.shared.settings.maxConcurrentDownloads
+    }
+    
+    // History limit to prevent unbounded growth
+    var maxHistoryItems: Int {
+        AppSettingsManager.shared.settings.maxHistoryItems
+    }
+    
+    // MARK: - Computed Properties
+    
+    /// Currently downloading items
+    var activeDownloads: [DownloadItemModel] {
+        downloads.filter { $0.status == .downloading || $0.status == .extracting }
+    }
+    
+    /// Items waiting in queue
+    var queuedDownloads: [DownloadItemModel] {
+        downloads.filter { $0.status == .queued }
+    }
+    
+    /// Is any download in progress?
+    var isDownloading: Bool {
+        !activeDownloads.isEmpty
+    }
+    
+    /// Total active + queued count for badge
+    var pendingCount: Int {
+        activeDownloads.count + queuedDownloads.count
+    }
     
     // MARK: - Persistence
     
     private static let appSupportDirectory: URL = {
         let fm = FileManager.default
         let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let appFolder = appSupport.appendingPathComponent("yt-dlp-Wrapper", isDirectory: true)
-        try? fm.createDirectory(at: appFolder, withIntermediateDirectories: true)
-        return appFolder
+        let newAppFolder = appSupport.appendingPathComponent("VidPull", isDirectory: true)
+        let oldAppFolder = appSupport.appendingPathComponent("yt-dlp-Wrapper", isDirectory: true)
+        
+        // Migrate from old folder name if it exists
+        if fm.fileExists(atPath: oldAppFolder.path) && !fm.fileExists(atPath: newAppFolder.path) {
+            try? fm.moveItem(at: oldAppFolder, to: newAppFolder)
+        }
+        
+        try? fm.createDirectory(at: newAppFolder, withIntermediateDirectories: true)
+        return newAppFolder
     }()
     
     private static var historyFileURL: URL {
@@ -73,8 +112,8 @@ class DownloadManager: ObservableObject {
         do {
             let data = try Data(contentsOf: historyFileURL)
             let items = try JSONDecoder().decode([DownloadItemModel].self, from: data)
-            // Filter out any pending/downloading items from previous sessions (can't resume)
-            return items.filter { $0.status != .pending && $0.status != .downloading && $0.status != .extracting }
+            // Filter out any active/queued items from previous sessions (can't resume)
+            return items.filter { $0.status == .completed || $0.status == .failed || $0.status == .cancelled }
         } catch {
             print("Failed to load history: \(error)")
             return []
@@ -82,9 +121,14 @@ class DownloadManager: ObservableObject {
     }
     
     private func saveHistory() {
-        // Only persist terminal states
-        let itemsToSave = downloads.filter { 
+        // Only persist terminal states, limited to maxHistoryItems
+        var itemsToSave = downloads.filter { 
             $0.status == .completed || $0.status == .failed || $0.status == .cancelled 
+        }
+        
+        // Enforce history limit - keep most recent items
+        if itemsToSave.count > maxHistoryItems {
+            itemsToSave = Array(itemsToSave.prefix(maxHistoryItems))
         }
         
         do {
@@ -126,18 +170,21 @@ class DownloadManager: ObservableObject {
     
     // MARK: - Visible Items Management
     
+    /// History items only (completed, failed, cancelled) - excludes active and queued
     var visibleDownloads: [DownloadItemModel] {
-        let historyItems = downloads.filter { $0.status != .pending && $0.id != activeDownload?.id }
-        return Array(historyItems.prefix(visibleItemsCount))
+        let history = downloads.filter { 
+            $0.status == .completed || $0.status == .failed || $0.status == .cancelled 
+        }
+        return Array(history.prefix(visibleItemsCount))
     }
     
     var hasMoreItems: Bool {
-        let historyItems = downloads.filter { $0.status != .pending && $0.id != activeDownload?.id }
+        let historyItems = downloads.filter { $0.status.isTerminal }
         return historyItems.count > visibleItemsCount
     }
     
     var remainingItemsCount: Int {
-        let historyItems = downloads.filter { $0.status != .pending && $0.id != activeDownload?.id }
+        let historyItems = downloads.filter { $0.status.isTerminal }
         return max(0, historyItems.count - visibleItemsCount)
     }
     
@@ -152,25 +199,20 @@ class DownloadManager: ObservableObject {
     private func checkYTDLPStatus() async {
         let isAvailable = await ytDLPService.isAvailable()
         await MainActor.run {
+            self.isYTDLPAvailable = isAvailable
             if !isAvailable {
                 self.errorMessage = "yt-dlp not found. Install with: brew install yt-dlp"
+            } else {
+                self.errorMessage = nil
             }
         }
     }
-
-    var ytDLPAvailable: Bool {
+    
+    /// Refresh yt-dlp availability status
+    func refreshYTDLPStatus() {
         Task {
-            await MainActor.run {
-                self.errorMessage = nil
-            }
-            let isAvailable = await ytDLPService.isAvailable()
-            if !isAvailable {
-                await MainActor.run {
-                    self.errorMessage = "yt-dlp not found. Install with: brew install yt-dlp"
-                }
-            }
+            await checkYTDLPStatus()
         }
-        return true
     }
 
     func setOutputFolder(_ url: URL) {
@@ -193,63 +235,133 @@ class DownloadManager: ObservableObject {
         saveConfig()
     }
 
-    func startDownload() {
-        guard !urlInput.isEmpty else { return }
-
+    // MARK: - Download Queue Management
+    
+    /// Add a download to the queue and start processing
+    func queueDownload() {
+        let url = urlInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !url.isEmpty else { return }
+        
+        // Clear input immediately to prevent double-submissions
+        urlInput = ""
+        
         let taskId = UUID()
-        currentTaskId = taskId
         let downloadItem = DownloadItemModel(
             id: taskId,
-            url: urlInput,
+            url: url,
             outputFolder: config.outputFolder,
-            status: .pending
+            status: .queued,
+            format: config.format
         )
 
         downloads.insert(downloadItem, at: 0)
-        activeDownload = downloadItem
-        isDownloading = true
-        urlInput = ""  // Clear input after starting
-
+        
+        // Process the queue
+        processQueue()
+    }
+    
+    /// Start download (alias for queueDownload for backward compatibility)
+    func startDownload() {
+        queueDownload()
+    }
+    
+    /// Process the download queue - start downloads up to maxConcurrentDownloads
+    private func processQueue() {
+        // Use activeTaskIds count to avoid race conditions
+        let currentActiveCount = activeTaskIds.count
+        let availableSlots = maxConcurrentDownloads - currentActiveCount
+        
+        guard availableSlots > 0 else { return }
+        
+        // Get queued items that aren't already being processed
+        let queuedItems = downloads.filter { $0.status == .queued && !activeTaskIds.contains($0.id) }
+        let itemsToStart = Array(queuedItems.prefix(availableSlots))
+        
+        for item in itemsToStart {
+            // Mark as active immediately to prevent double-processing
+            activeTaskIds.insert(item.id)
+            startDownloadTask(item)
+        }
+    }
+    
+    /// Start a specific download task
+    private func startDownloadTask(_ item: DownloadItemModel) {
+        updateStatus(id: item.id, status: .downloading)
+        
         Task {
             do {
+                // Create config with the item's saved format
+                var itemConfig = config
+                itemConfig.format = item.format ?? config.format
+                itemConfig.outputFolder = item.outputFolder
+                
                 try await ytDLPService.runDownload(
-                    id: taskId,
-                    url: downloadItem.url,
-                    config: config
+                    id: item.id,
+                    url: item.url,
+                    config: itemConfig
                 ) { [weak self] progress, statusText in
                     Task { @MainActor in
-                        self?.updateProgress(id: taskId, progress: progress, status: .downloading)
+                        self?.updateProgress(id: item.id, progress: progress, status: .downloading)
                     }
                 } statusHandler: { [weak self] status in
                     Task { @MainActor in
-                        self?.updateStatus(id: taskId, status: status)
+                        self?.updateStatus(id: item.id, status: status)
                     }
                 } fileNameHandler: { [weak self] fileName in
                     Task { @MainActor in
-                        self?.updateFileName(id: taskId, fileName: fileName)
+                        self?.updateFileName(id: item.id, fileName: fileName)
                     }
                 } completionHandler: { [weak self] result in
                     Task { @MainActor in
-                        self?.handleCompletion(id: taskId, result: result)
+                        self?.handleCompletion(id: item.id, result: result)
                     }
                 }
             } catch {
                 await MainActor.run {
-                    self.handleError(id: taskId, error: error)
+                    self.handleError(id: item.id, error: error)
                 }
             }
         }
     }
-
-    func cancelDownload() async {
-        guard let taskId = currentTaskId else { return }
-
-        await ytDLPService.cancelDownload(id: taskId)
-        updateStatus(id: taskId, status: .cancelled)
-        isDownloading = false
-        activeDownload = nil
-        currentTaskId = nil
+    
+    /// Cancel a specific download
+    func cancelDownload(_ item: DownloadItemModel) async {
+        await ytDLPService.cancelDownload(id: item.id)
+        activeTaskIds.remove(item.id)
+        updateStatus(id: item.id, status: .cancelled)
         saveHistory()
+        
+        // Process queue to start next download
+        processQueue()
+    }
+    
+    /// Cancel the first active download (for backward compatibility)
+    func cancelDownload() async {
+        guard let firstActive = activeDownloads.first else { return }
+        await cancelDownload(firstActive)
+    }
+    
+    /// Cancel all downloads (active and queued)
+    func cancelAllDownloads() async {
+        // Cancel all active downloads
+        for item in activeDownloads {
+            await ytDLPService.cancelDownload(id: item.id)
+            activeTaskIds.remove(item.id)
+            updateStatus(id: item.id, status: .cancelled)
+        }
+        
+        // Cancel all queued downloads
+        for item in queuedDownloads {
+            updateStatus(id: item.id, status: .cancelled)
+        }
+        
+        saveHistory()
+    }
+    
+    /// Remove a queued download before it starts
+    func removeFromQueue(_ item: DownloadItemModel) {
+        guard item.status == .queued else { return }
+        downloads.removeAll { $0.id == item.id }
     }
 
     func openFile(_ item: DownloadItemModel) {
@@ -272,21 +384,31 @@ class DownloadManager: ObservableObject {
     }
     
     func clearAll() {
-        downloads.removeAll { $0.status != .pending && $0.status != .downloading && $0.status != .extracting }
+        downloads.removeAll { 
+            $0.status == .completed || $0.status == .failed || $0.status == .cancelled 
+        }
         saveHistory()
         resetVisibleItems()
     }
     
     func retryDownload(_ item: DownloadItemModel) {
         guard item.status == .failed || item.status == .cancelled else { return }
-        guard !isDownloading else { return }
         
         // Remove the failed item from history
         downloads.removeAll { $0.id == item.id }
         
-        // Start a new download with the same URL
-        urlInput = item.url
-        startDownload()
+        // Queue a new download with the same URL
+        let taskId = UUID()
+        let downloadItem = DownloadItemModel(
+            id: taskId,
+            url: item.url,
+            outputFolder: item.outputFolder,
+            status: .queued,
+            format: item.format
+        )
+        
+        downloads.insert(downloadItem, at: 0)
+        processQueue()
     }
     
     func removeDownload(_ item: DownloadItemModel) {
@@ -297,32 +419,25 @@ class DownloadManager: ObservableObject {
     private func updateProgress(id: UUID, progress: Double, status: DownloadStatus) {
         if let index = downloads.firstIndex(where: { $0.id == id }) {
             downloads[index].progress = progress
-            if activeDownload?.id == id {
-                downloads[index].status = status
-                activeDownload = downloads[index]
-            }
+            downloads[index].status = status
         }
     }
 
     private func updateStatus(id: UUID, status: DownloadStatus) {
         if let index = downloads.firstIndex(where: { $0.id == id }) {
             downloads[index].status = status
-            if activeDownload?.id == id {
-                activeDownload = downloads[index]
-            }
         }
     }
 
     private func updateFileName(id: UUID, fileName: String) {
         if let index = downloads.firstIndex(where: { $0.id == id }) {
             downloads[index].fileName = fileName
-            if activeDownload?.id == id {
-                activeDownload = downloads[index]
-            }
         }
     }
 
     private func handleCompletion(id: UUID, result: Result<DownloadResult, YTDLPError>) {
+        activeTaskIds.remove(id)
+        
         switch result {
         case .success(let downloadResult):
             if let index = downloads.firstIndex(where: { $0.id == id }) {
@@ -332,27 +447,37 @@ class DownloadManager: ObservableObject {
                 if let title = downloadResult.videoTitle {
                     downloads[index].fileName = title
                 }
-                activeDownload = nil
             }
-            let title = downloadResult.videoTitle ?? "Video"
-            sendNotification(title: "Download Complete", body: "\(title) has finished downloading.")
+            
+            if AppSettingsManager.shared.settings.showNotifications {
+                let title = downloadResult.videoTitle ?? "Video"
+                sendNotification(title: "Download Complete", body: "\(title) has finished downloading.")
+            }
             saveHistory()
+            
         case .failure(let error):
             handleError(id: id, error: error)
         }
-        isDownloading = false
-        currentTaskId = nil
+        
+        // Process queue to start next download
+        processQueue()
     }
 
     private func handleError(id: UUID, error: Error) {
+        activeTaskIds.remove(id)
+        
         if let index = downloads.firstIndex(where: { $0.id == id }) {
             downloads[index].status = .failed
             downloads[index].errorMessage = error.localizedDescription
-            activeDownload = nil
         }
-        sendNotification(title: "Download Failed", body: error.localizedDescription)
-        isDownloading = false
+        
+        if AppSettingsManager.shared.settings.showNotifications {
+            sendNotification(title: "Download Failed", body: error.localizedDescription)
+        }
         saveHistory()
+        
+        // Process queue to start next download
+        processQueue()
     }
 
     private func sendNotification(title: String, body: String) {

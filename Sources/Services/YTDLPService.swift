@@ -5,6 +5,14 @@ enum YTDLPError: LocalizedError {
     case invalidURL
     case downloadFailed(String)
     case cancelled
+    case videoUnavailable
+    case privateVideo
+    case ageRestricted
+    case liveBroadcast
+    case geoRestricted
+    case copyrightClaim
+    case networkError
+    case rateLimited
 
     var errorDescription: String? {
         switch self {
@@ -13,10 +21,90 @@ enum YTDLPError: LocalizedError {
         case .invalidURL:
             return "Invalid URL provided"
         case .downloadFailed(let message):
-            return "Download failed: \(message)"
+            return message
         case .cancelled:
             return "Download was cancelled"
+        case .videoUnavailable:
+            return "Video is unavailable or has been removed"
+        case .privateVideo:
+            return "This video is private"
+        case .ageRestricted:
+            return "Age-restricted content. Sign in may be required"
+        case .liveBroadcast:
+            return "Cannot download live broadcasts"
+        case .geoRestricted:
+            return "Video not available in your region"
+        case .copyrightClaim:
+            return "Video blocked due to copyright"
+        case .networkError:
+            return "Network connection error"
+        case .rateLimited:
+            return "Too many requests. Please wait and try again"
         }
+    }
+    
+    /// Parse yt-dlp stderr output to determine specific error type
+    static func parse(from output: String, exitCode: Int32) -> YTDLPError {
+        let lowercased = output.lowercased()
+        
+        if lowercased.contains("video unavailable") || lowercased.contains("is unavailable") {
+            return .videoUnavailable
+        }
+        if lowercased.contains("private video") || lowercased.contains("sign in to confirm your age") {
+            return .privateVideo
+        }
+        if lowercased.contains("age-restricted") || lowercased.contains("age restricted") || lowercased.contains("confirm your age") {
+            return .ageRestricted
+        }
+        if lowercased.contains("live broadcast") || lowercased.contains("live event") || lowercased.contains("premieres in") {
+            return .liveBroadcast
+        }
+        if lowercased.contains("not available in your country") || lowercased.contains("geo") || lowercased.contains("blocked in your") {
+            return .geoRestricted
+        }
+        if lowercased.contains("copyright") || lowercased.contains("blocked") && lowercased.contains("claim") {
+            return .copyrightClaim
+        }
+        if lowercased.contains("unable to download") && (lowercased.contains("network") || lowercased.contains("connection")) {
+            return .networkError
+        }
+        if lowercased.contains("http error 429") || lowercased.contains("rate limit") || lowercased.contains("too many requests") {
+            return .rateLimited
+        }
+        
+        // Extract the most relevant error message
+        let errorMessage = extractErrorMessage(from: output) ?? "Exit code: \(exitCode)"
+        return .downloadFailed(errorMessage)
+    }
+    
+    /// Extract the most relevant error message from yt-dlp output
+    private static func extractErrorMessage(from output: String) -> String? {
+        let lines = output.components(separatedBy: .newlines)
+        
+        // Look for ERROR: lines first
+        for line in lines.reversed() {
+            if line.contains("ERROR:") {
+                let message = line.replacingOccurrences(of: "ERROR:", with: "").trimmingCharacters(in: .whitespaces)
+                // Truncate very long messages
+                if message.count > 100 {
+                    return String(message.prefix(100)) + "..."
+                }
+                return message
+            }
+        }
+        
+        // Look for error: lines
+        for line in lines.reversed() {
+            if line.lowercased().contains("error:") {
+                let message = line.trimmingCharacters(in: .whitespaces)
+                if message.count > 100 {
+                    return String(message.prefix(100)) + "..."
+                }
+                return message
+            }
+        }
+        
+        return nil
     }
 }
 
@@ -33,6 +121,7 @@ actor YTDLPService {
     private var runningTasks: [UUID: Process] = [:]
     private var downloadedFiles: [UUID: URL] = [:]
     private var videoTitles: [UUID: String] = [:]
+    private var errorOutputs: [UUID: String] = [:]  // Capture stderr for better error messages
 
     private init() {
         ytDLPPath = nil
@@ -83,6 +172,7 @@ actor YTDLPService {
         runningTasks[id] = process
         downloadedFiles[id] = nil
         videoTitles[id] = nil
+        errorOutputs[id] = ""
 
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -101,11 +191,32 @@ actor YTDLPService {
         if config.isPlaylist {
             arguments.removeAll { $0 == "--no-playlist" }
         }
-
-        if config.format != .best {
-            arguments.append("--format")
-            arguments.append(config.format.ytDLPFormat)
+        
+        // Help yt-dlp find ffmpeg for merging video+audio streams
+        let ffmpegPaths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"]
+        for path in ffmpegPaths {
+            if FileManager.default.fileExists(atPath: "\(path)/ffmpeg") {
+                arguments.append("--ffmpeg-location")
+                arguments.append(path)
+                break
+            }
         }
+
+        // Only add format flag if not using default (best quality)
+        if let formatString = config.format.ytDLPFormat {
+            arguments.append("-f")
+            arguments.append(formatString)
+            print("🎬 Using format: \(formatString)")
+        } else {
+            print("🎬 Using default format (best quality)")
+        }
+        
+        // Add format-specific arguments (e.g., audio extraction)
+        let additionalArgs = config.format.additionalArguments
+        if !additionalArgs.isEmpty {
+            print("🎬 Additional args: \(additionalArgs)")
+        }
+        arguments.append(contentsOf: additionalArgs)
 
         arguments.append("--output")
         arguments.append("\(config.outputFolder.path)/%(title)s.%(ext)s")
@@ -113,6 +224,9 @@ actor YTDLPService {
         arguments.append(url)
 
         process.arguments = arguments
+        
+        // Debug: Print the full command being executed
+        print("🎬 yt-dlp command: \(ytDLPPath.path) \(arguments.joined(separator: " "))")
 
         let outputHandle = stdoutPipe.fileHandleForReading
         let errorHandle = stderrPipe.fileHandleForReading
@@ -134,6 +248,7 @@ actor YTDLPService {
                 return
             }
             Task {
+                await self?.appendErrorOutput(id: id, output: output)
                 await self?.parseOutput(id: id, output: output, progressHandler: progressHandler, statusHandler: statusHandler, fileNameHandler: fileNameHandler)
             }
         }
@@ -156,6 +271,10 @@ actor YTDLPService {
         let exitCode = process.terminationStatus
         let downloadedFile = downloadedFiles[id]
         let videoTitle = videoTitles[id]
+        let errorOutput = errorOutputs[id] ?? ""
+        
+        // Cleanup stored data
+        errorOutputs.removeValue(forKey: id)
         
         // Cleanup temp files
         cleanupTempFiles(in: config.outputFolder)
@@ -172,8 +291,14 @@ actor YTDLPService {
             )
             completionHandler(.success(result))
         } else {
-            completionHandler(.failure(.downloadFailed("Exit code: \(exitCode)")))
+            // Use improved error parsing
+            let error = YTDLPError.parse(from: errorOutput, exitCode: exitCode)
+            completionHandler(.failure(error))
         }
+    }
+    
+    private func appendErrorOutput(id: UUID, output: String) {
+        errorOutputs[id, default: ""] += output
     }
 
     func cancelDownload(id: UUID) {

@@ -6,6 +6,7 @@ struct DownloadRowView: View {
     let onOpenFolder: () -> Void
     var onRetry: (() -> Void)? = nil
     var onRemove: (() -> Void)? = nil
+    var onCancel: (() -> Void)? = nil
 
     private var displayTitle: String {
         if let fileName = item.fileName, !fileName.isEmpty {
@@ -139,6 +140,36 @@ struct DownloadRowView: View {
                     }
                 }
             }
+            
+            // Action buttons for queued downloads
+            if item.status == .queued {
+                HStack(spacing: 8) {
+                    if let onCancel = onCancel {
+                        Button(action: onCancel) {
+                            Image(systemName: "xmark.circle")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Remove from Queue")
+                    }
+                }
+            }
+            
+            // Action buttons for active downloads
+            if item.status == .downloading || item.status == .extracting {
+                HStack(spacing: 8) {
+                    if let onCancel = onCancel {
+                        Button(action: onCancel) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 16))
+                                .foregroundStyle(.red.opacity(0.8))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Cancel Download")
+                    }
+                }
+            }
         }
         .padding(.vertical, 6)
         .padding(.horizontal, 8)
@@ -149,6 +180,7 @@ struct DownloadRowView: View {
     private var statusColor: Color {
         switch item.status {
         case .pending: return .gray
+        case .queued: return .purple
         case .downloading, .extracting: return .blue
         case .completed: return .green
         case .failed: return .red
@@ -160,6 +192,8 @@ struct DownloadRowView: View {
         switch item.status {
         case .downloading, .extracting:
             return Color.blue.opacity(0.08)
+        case .queued:
+            return Color.purple.opacity(0.06)
         case .completed:
             return Color.green.opacity(0.06)
         case .failed:

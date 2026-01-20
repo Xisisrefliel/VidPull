@@ -2,12 +2,16 @@ import SwiftUI
 import AppKit
 import Combine
 
-// Shared download manager instance
+// Shared instances
 let sharedDownloadManager = DownloadManager()
+let sharedSettingsManager = AppSettingsManager.shared
+let sharedClipboardMonitor = ClipboardMonitor.shared
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var popover: NSPopover?
+    var settingsWindow: NSWindow?
+    var onboardingWindow: NSWindow?
     private var cancellables = Set<AnyCancellable>()
     
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -19,7 +23,76 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             andEventID: AEEventID(kAEGetURL)
         )
         
+        // Listen for settings open notification
+        NotificationCenter.default.publisher(for: .openSettings)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.openSettings()
+            }
+            .store(in: &cancellables)
+        
+        // Setup clipboard monitoring
+        setupClipboardMonitoring()
+        
         setupMenuBar()
+        
+        // Show onboarding on first run
+        if !OnboardingView.hasCompletedOnboarding {
+            showOnboarding()
+        }
+    }
+    
+    private func showOnboarding() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 500, height: 550),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Welcome to VidPull"
+        window.isReleasedWhenClosed = false
+        onboardingWindow = window
+        
+        let onboardingView = OnboardingView { [weak self] in
+            DispatchQueue.main.async {
+                self?.onboardingWindow?.orderOut(nil)
+                self?.onboardingWindow = nil
+            }
+        }
+        window.contentView = NSHostingView(rootView: onboardingView)
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    private func setupClipboardMonitoring() {
+        // Start/stop monitoring based on settings
+        sharedSettingsManager.$settings
+            .receive(on: DispatchQueue.main)
+            .sink { settings in
+                if settings.clipboardMonitoring {
+                    sharedClipboardMonitor.startMonitoring()
+                } else {
+                    sharedClipboardMonitor.stopMonitoring()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Note: We don't auto-fill on detection anymore.
+        // Instead, we check for detected URLs when the popover opens.
+    }
+    
+    /// Check clipboard for video URL and auto-fill if enabled
+    private func autoFillFromClipboardIfNeeded() {
+        guard sharedSettingsManager.settings.clipboardMonitoring,
+              sharedSettingsManager.settings.autoFillFromClipboard,
+              sharedDownloadManager.urlInput.isEmpty else { return }
+        
+        // Check if there's a video URL in clipboard
+        if let clipboardContent = NSPasteboard.general.string(forType: .string),
+           sharedClipboardMonitor.isVideoURL(clipboardContent) {
+            sharedDownloadManager.setURLFromExtension(clipboardContent.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
     }
     
     private func setupMenuBar() {
@@ -59,11 +132,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem?.button else { return }
         
         let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ","))
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit VidPull", action: #selector(quitApp), keyEquivalent: "q"))
         
         statusItem?.menu = menu
         button.performClick(nil)
         statusItem?.menu = nil  // Remove menu so left-click works again
+    }
+    
+    @objc func openSettings() {
+        // Close popover if open
+        popover?.performClose(nil)
+        
+        // Reuse existing window or create new one
+        if settingsWindow == nil {
+            settingsWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 500, height: 400),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            settingsWindow?.title = "VidPull Settings"
+            settingsWindow?.contentView = NSHostingView(rootView: SettingsView())
+            settingsWindow?.center()
+        }
+        
+        settingsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
     
     @objc func quitApp() {
@@ -76,6 +172,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            // Auto-fill from clipboard when opening (if enabled and URL field is empty)
+            autoFillFromClipboardIfNeeded()
+            
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             NSApp.activate(ignoringOtherApps: true)
         }
@@ -85,6 +184,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem?.button, let popover = popover else { return }
         
         if !popover.isShown {
+            // Auto-fill from clipboard when opening (if enabled and URL field is empty)
+            autoFillFromClipboardIfNeeded()
+            
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             NSApp.activate(ignoringOtherApps: true)
         }
@@ -125,7 +227,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 @main
-struct yt_dlp_WrapperApp: App {
+struct VidPullApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
